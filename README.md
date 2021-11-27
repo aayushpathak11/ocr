@@ -61,3 +61,4 @@ This App is based on <a href="https://github.com/tesseract-ocr/tesseract/blob/ma
 * Tesseract4Android : [Apache 2.0](https://github.com/adaptech-cz/Tesseract4Android/blob/master/LICENSE)
 * ImageCropper : [Apache 2.0](https://github.com/ArthurHub/Android-Image-Cropper/blob/master/LICENSE.txt)
 
+# ocr
