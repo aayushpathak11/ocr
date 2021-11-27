@@ -1,0 +1,135 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.chaquo.python'
+
+android {
+    sourceSets{
+        main{
+            python.srcDir "src/main/python"
+        }
+    }
+    compileSdkVersion 29
+    def gitUrl = getRepositoryURL()
+
+    defaultConfig {
+        ndk{
+            abiFilters "armeabi-v7a","arm64-v8a","x86","x86_64"
+        }
+        python{
+            buildPython "C:/Users/DELL/AppData/Local/Programs/Python/Python37/python.exe"
+            pip{
+                install "git+https://github.com/LIAAD/yake"
+            }
+        }
+        applicationId "io.github.subhamtyagi.ocr"
+        minSdkVersion 17
+        targetSdkVersion 29
+        versionCode 8
+        versionName "2.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        resValue "string", "github_url", gitUrl
+        multiDexEnabled true
+        vectorDrawables.useSupportLibrary = true
+    }
+
+    buildTypes {
+
+        release {
+            resValue "string", "app_name", "OCR"
+            minifyEnabled true
+            shrinkResources true
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+        }
+
+        debug {
+
+            def workingBranch = getGitWorkingBranch()
+            def normalizedWorkingBranch = workingBranch.replaceFirst("^[^A-Za-z]+", "").replaceAll("[^0-9A-Za-z]+", "")
+
+            if (normalizedWorkingBranch.isEmpty() || workingBranch == "master" || workingBranch == "dev") {
+                applicationIdSuffix ".dev"
+                resValue "string", "app_name", "OCR Dev"
+            } else {
+                archivesBaseName = 'OCR_' + normalizedWorkingBranch
+                applicationIdSuffix ".dev." + normalizedWorkingBranch
+                resValue "string", "app_name", "OCR" + workingBranch
+            }
+
+            minifyEnabled false
+            shrinkResources false
+            zipAlignEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    splits {
+        abi {
+            enable true
+            reset()
+            include "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+            universalApk true
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+
+    implementation 'cz.adaptech.android:tesseract4android:2.1.1'
+
+    implementation 'com.theartofdev.edmodo:android-image-cropper:2.8.0'
+
+    implementation 'com.google.android.material:material:1.4.0-alpha02'
+
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+
+}
+
+static String getGitWorkingBranch() {
+    try {
+        def gitProcess = "git rev-parse --abbrev-ref HEAD".execute()
+        gitProcess.waitFor()
+        if (gitProcess.exitValue() == 0) {
+            return gitProcess.text.trim()
+        } else {
+            // .git not present
+            return ""
+        }
+    } catch (IOException ignored) {
+        // git is not installed
+        return ""
+    }
+}
+
+static String getRepositoryURL(){
+    try {
+        def gitProcess = "git config --get remote.origin.url".execute()
+        gitProcess.waitFor()
+        if (gitProcess.exitValue() == 0) {
+            return gitProcess.text.trim()
+        } else {
+            return ""
+        }
+    } catch (IOException ignored) {
+        return ""
+    }
+}
+
